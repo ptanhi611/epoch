@@ -1,5 +1,10 @@
 import numpy as np
+import matplotlib.pyplot as plt 
 
+
+
+
+#Defining the class "Node"
 class Node:
     def __init__(self, feature_index=None, threshold=None, left=None, right=None, value=None):
         self.feature_index= feature_index
@@ -9,6 +14,11 @@ class Node:
         self.value = value
 
 
+
+
+
+
+#Defining a helper function which will return the majority label in a list
 def most_common_label(y):
     labels = {}
     for label in y:
@@ -26,6 +36,11 @@ def most_common_label(y):
     return majority_label
 
 
+
+
+
+
+#Calculating Gini Impurity 
 def calculate_gini_impurity(labels):
     count_for_each = np.bincount(labels)
     probablities = count_for_each/len(labels)
@@ -33,6 +48,11 @@ def calculate_gini_impurity(labels):
 
 
 
+
+
+
+
+#Implementing the decision Making 
 def splitter(X,Y):
     n_values, n_features = X.shape
     best_gini = 1
@@ -62,10 +82,13 @@ def splitter(X,Y):
                     best_threshold = threshold
 
     return best_feature,best_threshold
-        
 
 
 
+
+
+
+#Function to Built tree using decision making 
 def Built_tree(X,Y,depth=0,max_depth=None,min_sample=1):
 
     if (
@@ -92,6 +115,10 @@ def Built_tree(X,Y,depth=0,max_depth=None,min_sample=1):
 
 
 
+
+
+
+#Importing the training and testing Data
 data = [
     [12.0, 1.5, 1, 'Wine'],
     [5.0, 2.0, 0, 'Beer'],
@@ -102,8 +129,6 @@ data = [
     [11.5, 1.7, 1, 'Wine'],
     [5.5, 2.3, 0, 'Beer']
 ]
-
-
 test_data = np.array([
     [6.0, 2.1, 0],   # Expected: Beer
     [39.0, 0.05, 1], # Expected: Whiskey
@@ -112,10 +137,18 @@ test_data = np.array([
 
 labels = {"Wine":0,"Beer":1,"Whiskey":2}
 
-
+#Coverting the labels and data into numpy arrays
 X = np.array([row[:3] for row in data])
 Y = np.array([labels.get(row[3]) for row in data])
 
+
+
+
+
+
+
+
+#Defining the predict_single and predict Functions.
 def predict_single(input, tree):
     if tree.value is not None:
         return tree.value
@@ -125,9 +158,14 @@ def predict_single(input, tree):
     else:
         return predict_single(input, tree.right)
 
-
 def predict(X_test, tree):
     return np.array([predict_single(row, tree) for row in X_test])
+
+
+
+
+
+
 
 
 # Build the decision tree
@@ -143,3 +181,51 @@ predicted_names = [inv_labels[val] for val in predicted]
 # Print results
 for i, sample in enumerate(test_data):
     print(f"Input: {sample} --> Predicted: {predicted_names[i]}")
+
+
+#Function to display the decision tree(this i have copied the whole from chat gpt, not other fucntions though)
+def plot_tree(node, x=0.5, y=1.0, dx=0.2, dy=0.1, ax=None, level=0):
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(12, 8))
+        ax.set_axis_off()
+
+    # Plot the current node
+    if node.value is not None:
+        label = inv_labels[node.value]
+        color = 'lightgreen'
+    else:
+        label = f"X[{node.feature_index}] <= {round(node.threshold, 2)}"
+        color = 'lightblue'
+
+    ax.text(x, y, label, ha='center', va='center', 
+            bbox=dict(boxstyle='round4', facecolor=color, edgecolor='black', linewidth=2))
+
+    # Recurse for children
+    if node.left is not None:
+        x_left = x - dx / (2 ** level)
+        y_child = y - dy
+        ax.plot([x, x_left], [y, y_child], 'k-', lw=2)
+        ax.text((x + x_left) / 2, (y + y_child) / 2, 'No', ha='center', va='center', fontsize=12, color='red')
+        plot_tree(node.left, x_left, y_child, dx, dy, ax, level + 1)
+
+    if node.right is not None:
+        x_right = x + dx / (2 ** level)
+        y_child = y - dy
+        ax.plot([x, x_right], [y, y_child], 'k-', lw=2)
+        ax.text((x + x_right) / 2, (y + y_child) / 2, 'Yes', ha='center', va='center', fontsize=12, color='green')
+        plot_tree(node.right, x_right, y_child, dx, dy, ax, level + 1)
+
+    if ax is None:
+        plt.show()
+
+
+
+#Printing the Decision Tree
+print()
+print()
+print("****************************************************")
+print()
+print("The decision tree structure is :")
+print()
+plot_tree(tree)
+plt.show()
